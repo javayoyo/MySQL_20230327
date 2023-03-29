@@ -209,3 +209,214 @@ select job, round(avg(sal),1), count(*) from emp group by job order by job asc;
 -- 위의 결과에서 job은 직급으로, 급여 평균값은 평균급여로, 사원수 조회값은 사원수로 표현하여 조회
 select job as '직급',count(*) as '사원수', round(avg(sal), 1) as '평균급여'
 from emp group by job order by job asc;
+
+-- 20230329 ------------------------------------------------------------------
+
+-- 부서별 그룹핑
+select deptno from emp group by deptno;
+select deptno, avg(sal) from emp group by deptno;
+-- 부서별 그룹핑하고 그 안에서 직급별 그룹핑 (1차그룹핑,2차그룹핑) / 
+select deptno, job, avg(sal) from emp group by deptno, job;
+select deptno, job, avg(sal) from emp group by job, deptno;
+select deptno, job, avg(sal) from emp group by deptno, job order by job asc;
+select deptno, job, avg(sal) from emp group by deptno, job order by deptno asc;
+
+-- having : 그룹핑한 결과에서 조건 적용
+-- 부서, 직급별로 묶고 그 결과에서 평균급여가 2000 이상인 결과만 조회 (전체기준에서 조회)
+select deptno, job, avg(sal) from emp
+	group by deptno, job
+		having avg(sal) >= 2000
+			order by job asc;
+
+-- 급여가 3000 이하인 사원을 대상으로 위의 그룹핑 수행 (그룹핑 수행후,평균급여 2000이상을 조회)
+select * from emp order by sal asc;  -- 추가 조건 필요 where 활용
+select deptno, job, avg(sal) from emp
+	where sal <= 3000
+		group by deptno, job
+			having avg(sal) >= 2000
+				order by job asc;
+-- date 타입을 문자로 표현하기 : date_format()
+select date_format(hiredate, '%Y') from emp; -- 해당 데이터의 연도 확인 가능
+-- --------------------------------------------------------------------
+/*
+	연습문제
+	1. 부서별 평균급여, 최고급여, 최저급여, 사원수 조회(평균급여는 소수점 둘째자리에서 반올림)
+    2. 직급별 사원수 조회(단 3명 이상인 결과만 출력)
+    3. 연도별 입사한 사원수 조회(조회결과 : 연도(yyyy), 사원수)
+    3.1. 위의 결과에서 각 연도별로 부서별 입사한 사원수 조회(조회결과 : 연도(yyyy), 부서번호, 사원수)
+*/
+-- 1번
+select deptno as '부서번호' ,round(avg(sal),1) as '평균급여',max(sal)as '최고급여',min(sal) as '최저급여',
+count(*) as '사원수' from emp group by deptno;
+-- 2번 -- count 내 * 이어도 상관무
+select job, count(empno) from emp group  by job having count(empno) >= 3; 
+-- 3번
+select date_format(hiredate, '%Y')as '입사년도',count(empno) as '사원수' from emp
+group by date_format(hiredate, '%Y');
+-- 3.1. 번
+select date_format(hiredate, '%Y')as '입사년도',deptno as '부서번호' ,
+count(empno) as '사원수' from emp
+group by date_format(hiredate, '%Y'), deptno;
+
+-- ==============================================================================
+select * from emp;
+select * from dept;
+-- 외부조인
+select * from emp, dept; 
+-- 조인 /공통된 컬럼을 기준으로 진행-- 내부조인/ select 의 경우에는 조회만 가능/테이블 추가,삭제등의 기능은 아님
+select * from emp, dept where emp.deptno = dept.deptno; 
+select * from emp e, dept d where e.deptno = d.deptno; 
+select empno,ename,dname,loc from emp e, dept d where e.deptno = d.deptno; 
+-- deptno select 하면 에러  / ambiguous (모호한 : 해당값이 2개 이상의 테이블로 있어 정확하게 조회 불가)
+-- select empno,ename,deptno,dname,loc from emp e, dept d where e.deptno = d.deptno; /에러
+select e.empno,e.ename,e.deptno,d.dname,d.loc from emp e, dept d where e.deptno = d.deptno; 
+-- 조인 후 emp 테이블만 조회
+select e.* from emp e, dept d where e.deptno = d.deptno;
+-- emp, dept 를 조인하여 empno, ename, deptno, dname , loc 조회
+-- (단, 급여sal가 2500 이상인 사원만 조회하고, 조회결과는 사원 이름ename 기준으로 오름차순 정렬)
+ select e.empno,e.ename,e.deptno,d.dname,d.loc
+	from emp e, dept d
+		where e.sal >=2500 and e.deptno = d.deptno
+			order by e.ename asc; 
+
+-- 일반쿼리 / 최저급여를 받는 사람이 누구인지?
+select * from emp order by sal asc;
+-- 1. 최저급여 값이 얼마인지 조회
+select min(sal) from emp;
+-- 2. 최저급여 값을 받는 사람이(최저급여 값과 sal 값이 일치하는) 누구인지 조회
+select * from emp where sal = 800;
+-- 서브쿼리 적용  // 서브쿼리가 먼저 실행/ 일반쿼리를 하나의 쿼리로 합치는 경우
+select * from emp where sal = (select min(sal) from emp);
+-- 최고 급여를 받는 사원 정보 조회
+select * from emp where sal = (select max(sal) from emp);
+
+-- allen 보다 높은 급여를 받는 사원 조회
+-- 1. 앨런 급여 찾기 // 급여 1600
+select * from emp order by sal asc;
+select * from emp where sal > 1600;
+
+-- 2. 앨런보다 높은 급여 찾기
+select sal from emp where ename = 'allen';
+select * from emp where sal > (select sal from emp where ename = 'allen');
+
+-- ===========================20230329 오후 ===========================
+/*
+	연습문제 
+    1. clark 보다 늦게 입사한 사원 조회 
+    2. 부서번호가 20인 사원 중에서 전체 사원 평균 급여보다 높은 급여를 받는 사원 조회 
+    3. 2번 조회 결과에서 부서이름, 부서위치도 함께 조회 
+*/
+-- 1번 / 1981-06-09 / 1.clark 입사날짜 2. 해당 날짜 이후에 입사한 사원 조회
+select * from emp;
+select hiredate from emp where ename = 'clark';
+select * from emp where hiredate > '1981-06-09';
+select * from emp where hiredate > (select hiredate from emp where ename = 'clark');
+
+-- 2번 / 1. 부서번호 20 2. 평균급여 확인 : 2073 =  select avg(sal) from emp
+select * from emp where deptno = 20 ;
+select avg(sal) from emp ; 
+select * from emp where sal > 2073;
+select * from emp where  deptno = 20 and sal > (select avg(sal) from emp);
+select * from emp where sal > (select avg(sal) from emp) and deptno = 20 ;
+-- 3번 / 조인
+select * from emp e, dept d
+	where e.deptno = d.deptno
+    and e.sal > (select avg(sal) from emp)
+    and e.deptno = 20;
+    
+-- -----------------------------------------------------------------------
+create table member1 (
+	id bigint,
+		member_email varchar(20),
+		member_password varchar(10)
+);
+
+insert into member1(id, member_email, member_password) values(1, 'member1@email.com', '1111');
+-- 모든 컬럼에 데이터를 저장한다면 컬럼이름 생략 가능 // 
+insert into member1 values(2, 'member2@email.com', '2222');
+insert into member1 values(3, 'member3@email.com'); -- 불가능,모든 컬럼에 데이터를 저장해야함 / error 1136
+-- 특정 컬럼에만 값을 넣고 싶은 경우
+insert into member1(id, member_email) values(4, 'member4@email.com');
+-- 테이블 만들 때 지정한 크기보다 큰 값을 저장할 때
+insert into member1 values(2,'member2@email.com','222222222222');-- 패스워드10글자까지/불가능 error 1406
+insert into member1(id, member_email, member_password) values(5, null , '1111');
+insert into member1(id, member_email, member_password) values(null, null , '1111');
+select * from member1;
+
+-- id 컬럼에 not null 제약조건 적용
+create table member2 (
+	id bigint not null,
+		member_email varchar(20),
+		member_password varchar(10) -- id에만 not null 제약조건 적용한 경우,
+);
+desc member2;  -- desc 테이블의 구조를 확인할 수 있는 명령 // null > No 인 경우 not null 임
+insert into member2(id, member_email, member_password) values(1, 'member1@email.com', '1111');
+-- error 1048 > Column "id" not null
+insert into member2(id, member_email, member_password) values(null, 'member1@email.com', '1111');
+insert into member2(id, member_email, member_password) values(2, null, '1111');
+
+
+create table member3 (
+	id bigint not null unique,
+		member_email varchar(20) not null,
+		member_password varchar(10) not null
+);
+desc member3;
+insert into member3(id, member_email, member_password) values(1,'member1@email.com','1111');
+-- error 1062  / 이미 등록된 데이터 중복인 경우 등록 불가 > unique 로 인해 불가능
+insert into member3(id, member_email, member_password) values(1,'member1@email.com','1111');
+insert into member3(id, member_email,member_password)values(2,'member1@email.com','1111');-- 등록가능
+
+create table member4 (
+	id bigint not null unique,
+		member_email varchar(20) not null unique,
+		member_password varchar(10) not null
+);
+insert into member4(id,member_email,member_password)values(1,'member1@email.com','1111');
+-- error 1062
+insert into member4(id,member_email,member_password)values(2,'member1@email.com','2222'); -- 불가능
+
+create table member5 (
+	id bigint not null unique,
+		member_email varchar(20) not null unique,
+		member_password varchar(10) not null,
+        member_created_date datetime
+);
+insert into member5(id,member_email,member_password, member_created_date)
+				values(1,'member1@email.com','1111', sysdate());
+select * from member5;
+insert into member5(id,member_email,member_password)
+				values(2,'member2@email.com','2222');
+
+create table member6 (
+	id bigint not null unique,
+		member_email varchar(20) not null unique,
+		member_password varchar(10) not null,
+        member_created_date datetime default now()
+);
+insert into member6(id, member_email, member_password)
+				values(1,'member1@email.com','1111'); -- 값을 지정하지 않아도 '디폴트'로 기본값 자동설정
+select * from member6;
+create table member7 (
+	id bigint primary key,
+		member_email varchar(20) not null unique,
+		member_password varchar(10) not null,
+        member_created_date datetime default now()
+);
+insert into member7(id, member_email, member_password)
+				values(1,'member1@email.com','1111'); 
+-- error 1062
+ insert into member7(id, member_email, member_password)
+				values(1,'member2@email.com','2222');   -- 이미 등록된 같은 값을 저장하면 에러
+select * from member7;
+
+create table member8 (
+		id bigint,
+		member_email varchar(20) not null unique,
+		member_password varchar(10) not null,
+        member_created_date datetime default now(),
+        constraint pk_member8 primary key(id)
+);
+
+-- 제약조건 확인
+select * from information_schema.table_constraints;
