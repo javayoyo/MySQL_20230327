@@ -829,8 +829,9 @@ alter table student drop s_major;
 
 -- ======테이블 ERD 예제=========================================================
 
-drop table if exists board_file_table;
+use db_dbclass;
 
+drop table if exists board_file_table;
 create table board_file_table(
 id bigint auto_increment,
 original_file_name varchar(100), -- 사용자가 업로드한 파일의 이름
@@ -894,6 +895,7 @@ member_password varchar(20) not null,
 
 constraint pk_member_table primary key(id)
 );
+
 drop table if exists good_table;
 create table good_table(
 id bigint auto_increment,
@@ -906,9 +908,202 @@ constraint fk_good_table_c foreign key(comment_id) references comment_table(id),
 constraint fk_good_table_m foreign key(member_id) references member_table(id) on delete cascade
 );
 
+-- -- ==========================20230403 월요일==================================================================
+-- 회원 기능
+-- 1. 회원가입
+-- 2. 이메일 중복체크 
+-- 기존 가입된 이메일로 가입하려고 한다면
+-- 기존 가입되어 있지 않은 이메일로 가입하려고 한다면
+-- 3. 로그인
+-- 4. 전체 회원 목록 조회 
+-- 5. 특정 회원만 조회 
+-- 6. 회원정보 수정화면 요청 
+-- 7. 회원정보 수정 처리(비밀번호 변경)
+-- 8. 회원 삭제 또는 탈퇴 
+-- =========================================================================================
 
+-- 회원 기능
+-- 1. 회원가입
+insert into member_table(member_email, member_name, member_password) values('spl0403@gmail.com', '김에스', 1234);
+insert into member_table(member_email, member_name, member_password) values('spl0401@gmail.com', '김큐알', 7890);
+insert into member_table(member_email, member_name, member_password) values('spl0325@gmail.com', '김엘엘', 9999);
 
+select * from member_table;
 
+-- 2. 이메일 중복체크
+-- 기존 가입된 이메일로 가입하려고 한다면
+select member_email from member_table where member_email = 'spl0403@gmail.com'; -- member_email 대신 * 가능
+-- 기존 가입되어 있지 않은 이메일로 가입하려고 한다면
+select member_email from member_table where member_email = 'aaaa@gmail.com'; -- member_email 대신 * 가능
+
+-- 3. 로그인
+select * from member_table where member_email = 'spl0403@gmail.com' and member_password = '1234' ;
+select * from member_table where member_email = 'spl0401@gmail.com' and member_password = '7890' ;
+
+-- 4. 전체 회원 목록 조회 
+select * from member_table;
+
+-- 5. 특정 회원만 조회
+select * from member_table where member_name like '_큐%';
+select * from member_table where id =3;
+
+-- 6. 회원정보 수정화면 요청 -- 해당 이메일 동일하면 그 멤버 테이블 출력
+select * from member_table where member_email = 'spl0403@gmail.com';
+
+-- 7. 회원정보 수정 처리(비밀번호 변경) -- 수정처리 기준은 'id'로 진행 / set ____ 입력 시 해당 수정해야할 사항 입력 , 로 추가 수정 가능
+update member_table set member_password = '5678' where id = 3;
+
+-- 8. 회원 삭제 또는 탈퇴 
+delete from member_table where id = 1 ;
+
+-- ======================================================================================================
+-- 게시글 카테고리 
+-- 게시판 카테고리는 자유게시판, 공지사항, 가입인사 세가지가 있음.
+insert into category_table(category_name) values('자유게시판');
+insert into category_table(category_name) values('공지사항');
+insert into category_table(category_name) values('가입인사');
+update category_table set category_name = '가입인사' where id = 3;
+select * from category_table;
+
+-- 게시판 기능 
+-- 1. 게시글 작성(파일첨부 x) 3개 이상
+-- 1번 회원이 자유게시판 글 2개, 공지사항 글 1개 작성 
+insert into board_table(board_title ,board_writer ,board_contents, board_file_attached ,member_id,category_id )
+values ('하이','김에스','하이하','0','1','1') ;
+insert into board_table(board_title ,board_writer ,board_contents, board_file_attached ,member_id,category_id )
+values ('하이','김에스','하이하이','0','1','1') ;
+insert into board_table(board_title ,board_writer ,board_contents, board_file_attached ,member_id,category_id )
+values ('하이','김에스','하이하이','0','1','2') ;
+
+-- 2번 회원이 자유게시판 글 3개 작성
+insert into board_table(board_title ,board_writer ,board_contents, board_file_attached ,member_id,category_id )
+values ('aaaa','김큐알','aaaa','0','2','1') ;
+insert into board_table(board_title ,board_writer ,board_contents, board_file_attached ,member_id,category_id )
+values ('bbbb','김큐알','bbbb','0','2','1') ;
+insert into board_table(board_title ,board_writer ,board_contents, board_file_attached ,member_id,category_id )
+values ('cccc','김큐알','cccc','0','2','1') ;
+
+-- 3번 회원이 가입인사 글 1개 작성
+ insert into board_table(board_title ,board_writer ,board_contents, board_file_attached ,member_id,category_id )
+values ('가입완료','김엘엘','가입완료','0','3','3') ;
+
+-- 1.1. 게시글 작성(파일첨부 o)
+-- 2번 회원이 파일있는 자유게시판 글 2개 작성
+insert into board_table(board_title ,board_writer ,board_contents, board_file_attached ,member_id,category_id )
+values ('파일있당','김큐알','파일','1','2','1') ;
+select * from board_table;
+insert into board_file_table(original_file_name, stored_file_name, board_id) 
+	values ('파일있당.jpg', '24898595634-파일있당.jpg',13  ) ;
+
+alter table board_file_table change original_file_name  original_file_name varchar(100);
+select * from board_file_table;
+
+insert into board_table(board_title ,board_writer ,board_contents, board_file_attached ,member_id,category_id )
+values ('파일있당2','김큐알','파일2','1','2','1') ;
+select * from board_table;
+insert into board_file_table(original_file_name, stored_file_name, board_id) 
+	values ('파일있당2.jpg', '2489859156333434-파일있당2.jpg',14  ) ;
+
+alter table board_file_table change original_file_name  original_file_name varchar(100);
+select * from board_file_table;
+
+-- 2. 게시글 목록 조회
+-- 2.1 전체글 목록 조회
+select * from board_table;
+
+-- 2.2 자유게시판 목록 조회 
+select * from board_table where category_id = 1;
+
+-- 2.3 공지사항 목록 조회 
+select * from board_table where category_id = 2;
+-- 2.4 목록 조회시 카테고리 이름도 함께 나오게 조회 > join 활용 -- 보드테이블 id = 카테고리 id 확인
+select* from board_table, category_table where category_table.id = board_table.category_id;
+
+-- =======================================================================================================
+-- 3. 2번 게시글 조회 (조회수 처리 필요함) -- id 3 기준으로 진행
+update board_table set board_hits = board_hits +1 where id =3 ;
+select * from board_table where id = 3;
+
+-- 3.1. 파일 첨부된 게시글 조회 (게시글 내용과 파일을 함께) -- id = 14의 경우
+select * from board_table;
+update board_table set board_hits = board_hits +1 where id = 14 ;
+select * from board_table where id = 14;
+
+-- 조인 활용 하는 경우의 -- 답안
+select* from board_table b, board_file_table bf where bf.board_id = b.id and b.id =14 ;
+
+-- 쿼리 두 번 수행 하는 경우 의 -- 답안
+select * from board_table where id = 14;
+select * from board_file_table where board_id = 14;
+ 
+-- 4. 1번 회원이 자유게시판에 첫번째로 작성한 게시글의 제목, 내용 수정 -- id = 1 이 있는 경우로 답안
+update board_table set board_title = '수정제목', board_contents='수정내용' where id =1;
+
+-- 5. 2번 회원이 자유게시판에 첫번째로 작성한 게시글 삭제
+ delete from board_table where id = 10  ;
+
+-- 7. 페이징 처리(한 페이지당 글 3개씩) -- 화면에서 전체를 볼 수 없어 몇개씩 잘라서 보여주기 / **중요** -- 게시글 10개 이상시 진행가능
+select * from board_table;
+select * from board_table order by id desc; -- 최신순 활용 > 내림차순 적용 (3번~14번까지 있음)
+select * from board_table order by id desc limit 0, 3;  -- 최신순 마지막 번호 0~3까지 조회 / 14,13,12
+select * from board_table order by id desc limit 3, 3; -- 최신순 3번 이후(초과) 4번부터 4,5,6 까지 조회 / 11,10,9
+select * from board_table order by id desc limit 6, 3; -- 최신순 6번 이후(초과) 7번부터 7,8,9 까지 조회 / 8.7.6
+select * from board_table order by id desc limit 0, 5; -- 최신순 마지막번호 0~5까지 조회 / 14,13,12,11,10
+select * from board_table order by id desc limit 2, 5; -- 최신순 2번 이후(초과) 3번부터 3,4,5,6,7 까지 조회 / 12,11,10,9,8
+
+-- 7.1. 첫번째 페이지 -- 10개 기준 / 최신순으로 진행 : 1페이지 10,9,8 /2페이지 7,6,5 / 3페이지 4,3,2  / 4페이지 1
+-- 7.2. 두번째 페이지
+-- 7.3. 세번째 페이지 
+-- 정렬기준은 조회수, 한페이지당 글 5개씩 볼 때 1페이지
+select * from board_table order by board_hits desc limit 0,5;
+-- 전체 글갯수
+select count(id) from board_table;
+-- 게시글 갯수 : 10개, 한페이지당 4개씩 : 3  , 한페이지당 3개씩 : 4
+
+-- 8. 검색(글제목 기준)
+-- 8.1 검색결과를 오래된 순으로 조회
+select * from board_table where board_title like '%안녕%' order by id asc;
+-- 8.2 검색결과를 조회수 내림차순으로 조회 
+select * from board_table where board_title like '%안녕%' order by board_hits desc;
+
+-- 8.3 검색결과 페이징 처리 (검색결과 중 첫페이지(한페이지당 글 2개씩 나온다고 가정))
+select * from board_table where board_title like '%안녕%' order by id desc limit 0, 2;
+
+-- ============================================================================================
+-- 댓글 기능 
+-- 1. 댓글 작성 
+-- 1.1. 1번 회원이 1번 게시글에 댓글 작성 -- spl 기준 3번게시글 / comment_writer > 이메일 값을 가져오도록 한다
+insert into comment_table(comment_writer, comment_contents , board_id , member_id)
+	values('spl0403@gmail.com','좋아요누르고감',3,1);
+    
+-- 1.2. 2번 회원이 1번 게시글에 댓글 작성 
+insert into comment_table(comment_writer, comment_contents , board_id , member_id)
+	values('spl0401@gmail.com','좋아요누르고감2',3,2);
+
+-- 2. 댓글 조회 -- 조인활용 여부 찾아보깅?
+ select * from board_table where id = 3;
+ select * from comment_table where board_id = 3;
+
+ select * from board_table b, comment_table c where b.id = c.board_id;
+
+-- 3. 댓글 좋아요  -- 좋아요 는 한번만 가능, 이미 있으면 취소, 없으면 좋아요 로 설정
+-- 3.1. 1번 회원이 2번 회원이 작성한 댓글에 좋아요 클릭
+-- 좋아요 하기 전 체크
+select id from good_table where comment_id = 2 and member_id = 1;
+
+-- 좋아요 한 적이 없다면 좋아요 설정하기
+insert into good_table(comment_id  , member_id ) values (2, 1);
+
+-- 좋아요 한 적이 있다면 좋아요 취소
+delete from good_table where id = 1;
+
+-- 3.2. 3번 회원이 2번 회원이 작성한 댓글에 좋아요 클릭 
+insert into good_table(comment_id  , member_id ) values (2, 3);
+
+-- 4. 댓글 조회시 좋아요 갯수도 함께 조회
+select count(id) from good_table where comment_id = 1;
+
+-- ============================================================================================
 
 
 
