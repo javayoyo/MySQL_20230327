@@ -1080,10 +1080,11 @@ insert into comment_table(comment_writer, comment_contents , board_id , member_i
 insert into comment_table(comment_writer, comment_contents , board_id , member_id)
 	values('spl0401@gmail.com','좋아요누르고감2',3,2);
 
--- 2. 댓글 조회 -- 조인활용 여부 찾아보깅?
+-- 2. 댓글 조회
+-- 쿼리 두 번 사용하는 경우
  select * from board_table where id = 3;
  select * from comment_table where board_id = 3;
-
+-- 조인을 활용하여 쿼리 두 번을 한번에 보여주는 경우 - 답안
  select * from board_table b, comment_table c where b.id = c.board_id;
 
 -- 3. 댓글 좋아요  -- 좋아요 는 한번만 가능, 이미 있으면 취소, 없으면 좋아요 로 설정
@@ -1103,8 +1104,339 @@ insert into good_table(comment_id  , member_id ) values (2, 3);
 -- 4. 댓글 조회시 좋아요 갯수도 함께 조회
 select count(id) from good_table where comment_id = 1;
 
--- ============================================================================================
+-- =============20230404 화요일 ===============================================================================
+-- 과정평가형 공개가이드 3. 투표 프로그램 예제
+-- 테이블 3개 만들기, 주민만 정보 2개 넣기
+
+-- 투표이력 테이블 생성 
+drop table if exists tbl_vote_202005;
+create table tbl_vote_202005(
+    v_jumin char(13) not null primary key, -- 주민번호
+    v_name varchar(20), -- 성명
+    m_no char(1), -- 후보번호
+    v_time char(4), -- 투표시간
+    v_area char(20), -- 투표장소
+    v_confirm char(1) -- 유권자확인
+    );
+select * from tbl_vote_202005;    
+
+-- 투표이력 데이터 저장
+insert into tbl_vote_202005 values ('99010110001', '김유권', '1', '0930', '제1투표장', 'N');
+insert into tbl_vote_202005 values ('89010120002', '이유권', '2', '0930', '제1투표장', 'N');
+insert into tbl_vote_202005 values ('69010110003', '박유권', '3', '0930', '제1투표장', 'Y');
+insert into tbl_vote_202005 values ('59010120004', '홍유권', '4', '0930', '제1투표장', 'Y');
+insert into tbl_vote_202005 values ('79010110005', '조유권', '5', '0930', '제1투표장', 'Y');
+insert into tbl_vote_202005 values ('89010120006', '최유권', '1', '0930', '제1투표장', 'Y');
+insert into tbl_vote_202005 values ('59010110007', '지유권', '1', '0930', '제1투표장', 'Y');
+insert into tbl_vote_202005 values ('49010120008', '장유권', '3', '0930', '제1투표장', 'Y');
+insert into tbl_vote_202005 values ('79010110009', '정유권', '3', '0930', '제1투표장', 'Y');
+insert into tbl_vote_202005 values ('89010120010', '강유권', '4', '0930', '제1투표장', 'Y');
+insert into tbl_vote_202005 values ('99010110011', '신유권', '5', '0930', '제1투표장', 'Y');
+insert into tbl_vote_202005 values ('79010120012', '오유권', '1', '1330', '제1투표장', 'Y');
+insert into tbl_vote_202005 values ('69010110013', '현유권', '4', '1330', '제2투표장', 'Y');
+insert into tbl_vote_202005 values ('89010110014', '왕유권', '2', '1330', '제2투표장', 'Y');
+insert into tbl_vote_202005 values ('99010110015', '유유권', '3', '1330', '제2투표장', 'Y');
+
+insert into tbl_vote_202005 values ('79010110016', '한유권', '2', '1330', '제2투표장', 'Y');
+insert into tbl_vote_202005 values ('89010110017', '문유권', '4', '1330', '제2투표장', 'Y');
+insert into tbl_vote_202005 values ('99010110018', '양유권', '2', '1330', '제2투표장', 'Y');
+insert into tbl_vote_202005 values ('99010110019', '구유권', '4', '1330', '제2투표장', 'Y');
+insert into tbl_vote_202005 values ('79010110020', '황유권', '5', '1330', '제2투표장', 'Y');
+insert into tbl_vote_202005 values ('69010110021', '배유권', '3', '1330', '제2투표장', 'Y');
+insert into tbl_vote_202005 values ('79010110022', '전유권', '3', '1330', '제2투표장', 'Y');
+insert into tbl_vote_202005 values ('99010110023', '고유권', '1', '1330', '제2투표장', 'Y');
+insert into tbl_vote_202005 values ('59010110024', '권유권', '3', '1330', '제2투표장', 'Y');
+
+insert into tbl_vote_202005 values ('00010130024', '오유권', '3', '1330', '제2투표장', 'Y');
+insert into tbl_vote_202005 values ('02010140024', '최유권', '3', '1330', '제2투표장', 'Y');
 
 
+-- 후보자 테이블 생성
+drop table if exists tbl_member_202005;
+create table tbl_member_202005(
+    m_no char(1) not null primary key, -- 후보번호
+    m_name varchar(20), -- 성명
+    p_code char(2), -- 소속정당
+    p_school char(1), -- 최종학력
+    m_jumin char(13), -- 주민번호
+    m_city varchar(20) -- 지역구
+    );
+select * from tbl_member_202005;    
+-- 후보자 데이터 저장
+insert into tbl_member_202005 values ('1', '김후보', 'P1', '1', '6603011999991', '수선화동');
+insert into tbl_member_202005 values ('2', '이후보', 'P2', '3', '5503011999992', '민들래동');
+insert into tbl_member_202005 values ('3', '박후보', 'P3', '2', '7703011999993', '나팔꽃동');
+insert into tbl_member_202005 values ('4', '조후보', 'P4', '2', '8803011999994', '진달래동');
+insert into tbl_member_202005 values ('5', '최후보', 'P5', '3', '9903011999995', '개나리동');
 
+-- 정당 테이블 생성
+drop table if exists tbl_party_202005;
+create table tbl_party_202005(
+    p_code char(2) not null primary key, -- 정당코드
+    p_name varchar(20), -- 명칭 / 정당명칭
+    p_indate date, -- 등록연월일
+    p_reader varchar(20), -- 대표자
+    p_tel1 char(3), -- 전화번호1
+    p_tel2 char(4), -- 전화번호2
+    p_tel3 char(4) -- 전화번호3
+    );
+select * from tbl_party_202005;
 
+-- 정당 데이터 저장    
+insert into tbl_party_202005 values ('P1', 'A정당', '2010-01-01', '위대표', '02', '1111', '0001');
+insert into tbl_party_202005 values ('P2', 'B정당', '2010-02-01', '명대표', '02', '1111', '0002');
+insert into tbl_party_202005 values ('P3', 'C정당', '2010-03-01', '기대표', '02', '1111', '0003');
+insert into tbl_party_202005 values ('P4', 'D정당', '2010-04-01', '옥대표', '02', '1111', '0004');
+insert into tbl_party_202005 values ('P5', 'E정당', '2010-05-01', '임대표', '02', '1111', '0005');
+
+select * from tbl_vote_202005;    
+select * from tbl_member_202005;    
+select * from tbl_party_202005;
+-- ===========예제 문제 풀어보기 =============================================================================================
+-- 1 . 후보자정보 조회
+-- 1.1 후보자, 정당 테이블 조인
+select * from tbl_member_202005 m, tbl_party_202005 p where m.p_code = p.p_code;
+-- 1.2 필요한 정보만 조회 (컬럼이름 한글로)
+select m.m_no as '후보번호', m.m_name as '성명' , p.p_code as '소속정당' ,
+m.p_school as '최종학력' , m.m_jumin as '주민번호' , m.m_city as '지역구',
+p.p_tel1, p.p_tel2, p.p_tel3
+from tbl_member_202005 m, tbl_party_202005 p where m.p_code = p.p_code ;
+
+-- 1.3 학력 표현
+-- 1: 고졸, 2: 학사, 3: 석사, 4: 박사
+select p_school from tbl_member_202005;
+select p_school,
+	case
+		when p_school ='1' then '고졸'
+		when p_school ='2' then '학사'
+        when p_school ='3' then '석사'
+        when p_school ='4' then '박사'
+    
+        else '없음'
+    end as '학력'
+    from tbl_member_202005;
+
+-- 1.4 주민번호(총13자리)
+select m_jumin from tbl_member_202005;
+-- substr()
+-- 앞 6자리
+select substr(m_jumin,1,6) from tbl_member_202005 ;
+-- 뒤 7자리
+select substr(m_jumin,7,7) from tbl_member_202005 ;
+-- 010101-1234567
+-- concat() 연결
+select concat( 
+		substr(m_jumin,1,6),
+        '-',
+        substr(m_jumin,7,7)
+        ) as '주민번호'
+        from tbl_member_202005;
+        
+        
+-- 1.5 대표전화
+select p_tel1,p_tel2,p_tel3 from tbl_party_202005;
+select concat( 
+		substr(p_tel1,1,2),
+        '-',
+        substr(p_tel2,1,4),
+        '-',
+        substr(p_tel3,1,4)
+        ) as '대표전화'
+        from tbl_party_202005;
+        
+-- 1.6 완성
+select  m.m_no as '후보번호', 
+		m.m_name as '성명', 
+        p.p_name as '소속정당', 
+        case when m.p_school='1' then '고졸'
+			 when m.p_school='2' then '학사'
+			 when m.p_school='3' then '석사'
+			 when m.p_school='4' then '박사'
+			else '없음'
+			end as '학력', 
+		concat(
+				substr(m.m_jumin, 1, 6),
+                '-',
+                substr(m.m_jumin, 7, 7)
+			 ) as '주민번호', 
+        m.m_city as '지역구', 
+        concat(p.p_tel1, '-', p.p_tel2, '-', p.p_tel3) as '대표전화'        
+	from tbl_member_202005 m, tbl_party_202005 p 
+	where m.p_code = p.p_code;
+    
+-- 후보자등수 조회 / 조인 필요 후보자-투표
+select * from tbl_vote_202005;   
+select m_no, count(m_no) from tbl_vote_202005 group by m_no;
+select m_no, count(m_no) from tbl_vote_202005 where v_confirm = 'Y' group by m_no;
+
+select m.m_no as '후보번호', m.m_name as '성명', count(v.m_no) as '총투표건수'
+	from tbl_vote_202005 v, tbl_member_202005 m
+    where v.m_no=m.m_no and v.v_confirm='Y' 
+    group by m.m_no, m.m_name -- 번호와 이름을 같이 보려면 그룹핑 필요
+    order by count(v.m_no) desc, m.m_name asc;
+-- =========================20230404 오후 =======================================================
+    -- 3. 투표검수조회
+    -- 생년월일 조회 / 만 나이 20230404 일 기준으로 설정 / 
+    select v_jumin from tbl_vote_202005;
+    
+-- 주민번호 7번째 자리 1,2 면 19 , 3,4 면 20 / 19인지 20인지 확인
+select v_jumin,
+		case
+				when substr(v_jumin, 7,1) in('1', '2') then '19'
+				when substr(v_jumin, 7,1) in('3', '4') then '20'
+				end as '년도 앞자리'
+		from tbl_vote_202005;
+
+select concat(       -- 최종 답안
+		-- 앞자리 만들기
+		case
+				when substr(v_jumin, 7,1) in('1', '2') then '19'
+				when substr(v_jumin, 7,1) in('3', '4') then '20'
+				end,
+        -- 년도 뒤 두자리
+			substr(v_jumin,1,2),
+			'년',
+			substr(v_jumin,3,2),
+			'월',
+			substr(v_jumin,5,2),
+			'일생'
+            ) as '생년월일'
+        from tbl_vote_202005;
+            
+
+-- 3.2 만 나이 계산
+-- 만 나이(현재년도 - 태어난년도)
+-- 현재 시간
+ select sysdate() from dual;
+-- 현재 년도
+select date_format(sysdate(), '%Y') from dual;
+ -- 정수형태로 변환
+ select cast(date_format(sysdate(), '%Y') as unsigned) from dual; -- 현재년도만 조회
+ select cast(date_format(sysdate(), '%Y') as unsigned) - 2021 from dual; -- 현재년도 - 태어난년도
+ 
+ select concat(
+				'만',
+                cast(date_format(sysdate(), '%Y') as unsigned) -- 현재년도
+				-          -- 뺄셈
+                concat(case 
+							when substr(v_jumin, 7, 1) in('1', '2') then '19'
+							when substr(v_jumin, 7, 1) in('3', '4') then '20'
+						end,
+					   substr(v_jumin, 1, 2)
+					  ),
+                '세'
+			 ) as '나이'
+	from tbl_vote_202005;
+ 
+-- 3.3 성별 조회
+select
+			case
+				when substr(v_jumin,7,1) in('1','3') then '남'
+				when substr(v_jumin,7,1) in('2','4') then '여'
+			end as '성별'
+		from tbl_vote_202005;
+        
+-- 3.4 투표 시간 조회
+select
+	concat(
+		substr(v_time, 1,2) ,
+        ':',
+        substr(v_time, 3,2)
+        )as '투표시간'
+	from tbl_vote_202005;
+
+-- 3.5 유권자 확인 조회
+select
+		case
+				when v_confirm = 'Y' then '확인'
+				when v_confirm = 'N' then '미확인'
+			end as '유권자확인'
+		from tbl_vote_202005;
+        
+-- * 투표검수조회 화면 종합 결과
+select  v_name as '성명',
+		concat(
+				case 
+					when substr(v_jumin, 7, 1) in('1', '2') then '19'
+                    when substr(v_jumin, 7, 1) in('3', '4') then '20'
+				end,
+				substr(v_jumin, 1, 2), -- 년도값 
+                '년',
+                substr(v_jumin, 3, 2), 
+                '월',
+                substr(v_jumin, 5, 2), 
+                '일생'
+			  ) as '생년월일',
+        concat(
+				'만',
+                cast(date_format(sysdate(), '%Y') as unsigned) -- 현재년도
+				- -- 뺄셈
+                concat(case 
+							when substr(v_jumin, 7, 1) in('1', '2') then '19'
+							when substr(v_jumin, 7, 1) in('3', '4') then '20'
+						end,
+					   substr(v_jumin, 1, 2)
+					  ),
+                '세'
+			 ) as '나이',
+        case 
+			when substr(v_jumin, 7, 1) in('1', '3') then '남'
+			when substr(v_jumin, 7, 1) in('2', '4') then '여'
+		end as '성별',
+		m_no as '후보번호',
+        concat(
+				substr(v_time, 1, 2),
+                ':',
+                substr(v_time, 3, 2)
+			  ) as '투표시간',
+        case when v_confirm='Y' then '확인'
+			 when v_confirm='N' then '미확인'
+		end as '유권자확인'
+	from tbl_vote_202005;
+-- ======================================================================================================
+-- view(뷰) : 가상테이블/ 빈번한 셀렉 쿼리 작업을 가상테이블로 활용(쿼리 내용을 가상테이블 로 만들어 view화 수행)
+--  ㄴ 쿼리 내용 변경시, '뷰'도 자동변경
+
+create view vote_result as
+select  v_name as '성명',
+		concat(
+				case 
+					when substr(v_jumin, 7, 1) in('1', '2') then '19'
+                    when substr(v_jumin, 7, 1) in('3', '4') then '20'
+				end,
+				substr(v_jumin, 1, 2), -- 년도값 
+                '년',
+                substr(v_jumin, 3, 2), 
+                '월',
+                substr(v_jumin, 5, 2), 
+                '일생'
+			  ) as '생년월일',
+        concat(
+				'만',
+                cast(date_format(sysdate(), '%Y') as unsigned) -- 현재년도
+				- -- 뺄셈
+                concat(case 
+							when substr(v_jumin, 7, 1) in('1', '2') then '19'
+							when substr(v_jumin, 7, 1) in('3', '4') then '20'
+						end,
+					   substr(v_jumin, 1, 2)
+					  ),
+                '세'
+			 ) as '나이',
+        case 
+			when substr(v_jumin, 7, 1) in('1', '3') then '남'
+			when substr(v_jumin, 7, 1) in('2', '4') then '여'
+		end as '성별',
+		m_no as '후보번호',
+        concat(
+				substr(v_time, 1, 2),
+                ':',
+                substr(v_time, 3, 2)
+			  ) as '투표시간',
+        case when v_confirm='Y' then '확인'
+			 when v_confirm='N' then '미확인'
+		end as '유권자확인'
+	from tbl_vote_202005;
+select * from vote_result;
+
+        
