@@ -1367,6 +1367,7 @@ select  v_name as '성명',
                 substr(v_jumin, 5, 2), 
                 '일생'
 			  ) as '생년월일',
+        
         concat(
 				'만',
                 cast(date_format(sysdate(), '%Y') as unsigned) -- 현재년도
@@ -1384,6 +1385,7 @@ select  v_name as '성명',
 			when substr(v_jumin, 7, 1) in('2', '4') then '여'
 		end as '성별',
 		m_no as '후보번호',
+        
         concat(
 				substr(v_time, 1, 2),
                 ':',
@@ -1411,6 +1413,7 @@ select  v_name as '성명',
                 substr(v_jumin, 5, 2), 
                 '일생'
 			  ) as '생년월일',
+              
         concat(
 				'만',
                 cast(date_format(sysdate(), '%Y') as unsigned) -- 현재년도
@@ -1428,6 +1431,7 @@ select  v_name as '성명',
 			when substr(v_jumin, 7, 1) in('2', '4') then '여'
 		end as '성별',
 		m_no as '후보번호',
+        
         concat(
 				substr(v_time, 1, 2),
                 ':',
@@ -1438,5 +1442,55 @@ select  v_name as '성명',
 		end as '유권자확인'
 	from tbl_vote_202005;
 select * from vote_result;
+
+-- ============================================================================================================
+-- 20230405 과정평가형 테스트
+use db_dbclass;
+
+drop table member;
+create table member (
+id bigint not null primary key ,
+password varchar(10) not null,
+name varchar(10) not null,
+birthday int(10) not null,
+gender varchar(1) not null,
+email varchar(20) not null,
+tel int(20) not null
+
+);
+select * from member;
+
+insert into member(id, password, name, birthday, gender, email, tel) values (1, 1234, '하이', 20230405, '남', 'hi@gmail.com', 0321111234);
+insert into member(id, password, name, birthday, gender, email, tel) values (2, 5678, '하이2', 20230404, '여','hi2@gmail.com', 0321111235);
+
+
+
+drop table board;
+create table board(
+no bigint primary key auto_increment,
+member_id bigint,
+title varchar(10),
+contents varchar(500),
+created_time datetime default now(),
+hits int default 0,
+constraint fk_board foreign key(member_id) references member(id)
+
+);
+select * from board;
+
+insert into board(member_id, title, contents, hits) values(1,'하이','하이하이',0);
+insert into board(member_id, title, contents, hits) values(2,'하이하','하하이하이',0);
+
+select * from board where member_id = 1;
+
+select * from board order by created_time asc;
+select * from board order by hits desc;
+
+update board set title = '하호하호' where member_id = 1;
+
+delete from board where member_id = 2;
+
+
+
 
         
